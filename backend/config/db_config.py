@@ -12,7 +12,7 @@ MONGO_URI = os.getenv("MONGODB_URI")
 try:
     client = MongoClient(MONGO_URI)
     db = client["tempai_db"]  # database name
-    print("✅ MongoDB connection successful")
+    print("MongoDB connection successful")
 except Exception as e:
-    print("❌ MongoDB connection failed:", e)
+    print("MongoDB connection failed:", e)
     db = None
