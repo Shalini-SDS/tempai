@@ -4,14 +4,22 @@ from flask_cors import CORS
 from config.db_config import db
 from controllers.sensor_controller import sensor_bp
 from controllers.ai_controller import ai_bp
+from controllers.auth_controller import auth_bp
+from controllers.report_controller import report_bp
+from controllers.data_controller import data_bp
+from controllers.user_data_controller import user_data_bp
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)  # enable cross-origin for your React frontend
+    CORS(app, supports_credentials=True, expose_headers=['Content-Disposition'])  # enable cross-origin for your React frontend
 
     # Register blueprints
     app.register_blueprint(sensor_bp)
     app.register_blueprint(ai_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(report_bp)
+    app.register_blueprint(data_bp)
+    app.register_blueprint(user_data_bp)
 
     @app.route('/')
     def home():

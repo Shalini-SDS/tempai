@@ -1,6 +1,6 @@
 # controllers/ai_controller.py
 from flask import Blueprint, jsonify, request
-from services.ai_services import predict_temp, detect_anomaly_from_recent
+from services.ai_services import predict_temp, detect_anomaly_from_recent, analyze_symptoms
 from config.db_config import db
 import datetime
 from bson.json_util import dumps
@@ -29,6 +29,22 @@ def anomaly_check():
         return dumps(anomalies), 200
     except Exception as e:
         return jsonify({"error": "Anomaly check failed", "details": str(e)}), 500
+
+
+# POST endpoint for AI prediction based on symptoms
+@ai_bp.route('/api/ai/predict', methods=['POST'])
+def ai_predict():
+    try:
+        data = request.get_json()
+        result = analyze_symptoms(
+            temperature=data.get('temperature'),
+            age=data.get('age'),
+            days_since_onset=data.get('days_since_onset'),
+            symptoms=data.get('symptoms', [])
+        )
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": "AI prediction failed", "details": str(e)}), 500
 
 
 # Optional: endpoint to get aggregated stats (min/max/avg)
