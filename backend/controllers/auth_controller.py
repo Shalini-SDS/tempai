@@ -3,7 +3,7 @@ from models.user_model import User
 import jwt
 import os
 from functools import wraps
-from google.auth.transport import requests
+from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')

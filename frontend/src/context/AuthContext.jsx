@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = async (email, password) => {
-    const response = await fetch('http://localhost:5000/api/auth/login', {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
   }
 
   const signup = async (email, password, name) => {
-    const response = await fetch('http://localhost:5000/api/auth/signup', {
+    const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
   }
 
   const googleLogin = async (googleToken) => {
-    const response = await fetch('http://localhost:5000/api/auth/google-oauth', {
+    const response = await fetch('/api/auth/google-oauth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: googleToken }),
@@ -111,12 +111,12 @@ export function AuthProvider({ children }) {
 
   const getUserSettings = async () => {
     if (!token) throw new Error('No token available')
-    
-    const response = await fetch('http://localhost:5000/api/auth/user-settings', {
+
+    const response = await fetch('/api/auth/user-settings', {
       method: 'GET',
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json'
       },
     })
     
@@ -130,12 +130,12 @@ export function AuthProvider({ children }) {
 
   const updateUserSettings = async (settings) => {
     if (!token) throw new Error('No token available')
-    
-    const response = await fetch('http://localhost:5000/api/auth/user-settings', {
+
+    const response = await fetch('/api/auth/user-settings', {
       method: 'PUT',
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(settings),
     })

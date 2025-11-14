@@ -129,7 +129,7 @@ export default function Dashboard({ onLogout }) {
   // Fetch static data
   useEffect(() => {
     const fetchStaticData = async () => {
-      const API = 'http://localhost:5000'
+      const API = ''
       try {
         const [symptomsRes, recommendationsRes, severityRes, contactsRes, facilitiesRes, criticalRes, warningRes, vitalsRes] = await Promise.all([
           fetch(`${API}/api/data/symptoms`),
@@ -167,7 +167,7 @@ export default function Dashboard({ onLogout }) {
     const fetchUserData = async () => {
       if (!token) return
 
-      const API = 'http://localhost:5000'
+      const API = ''
       try {
         const [timelineRes, insightsRes, historyRes] = await Promise.all([
           fetch(`${API}/api/user/timeline`, {
@@ -194,7 +194,7 @@ export default function Dashboard({ onLogout }) {
 
   useEffect(() => {
     const fetchLatestReading = async () => {
-      const API = 'http://localhost:5000'
+      const API = ''
       try {
         const res = await fetch(`${API}/api/latestData`)
         const data = await res.json()
@@ -207,7 +207,7 @@ export default function Dashboard({ onLogout }) {
     }
     
     const fetchHistory = async () => {
-      const API = 'http://localhost:5000'
+      const API = ''
       try {
         const res = await fetch(`${API}/api/history?limit=50`)
         const data = await res.json()
@@ -291,7 +291,7 @@ export default function Dashboard({ onLogout }) {
   }
 
   const analyze = async () => {
-    const API = 'http://localhost:5000'
+    const API = ''
     setLoading(true)
     try {
       const payload = {
@@ -350,7 +350,7 @@ export default function Dashboard({ onLogout }) {
         return
       }
 
-      const response = await fetch('http://localhost:5000/api/report/health-summary', {
+      const response = await fetch('/api/report/health-summary', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,

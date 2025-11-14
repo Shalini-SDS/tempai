@@ -2,6 +2,7 @@
 from flask import Blueprint, jsonify, request
 from services.ai_services import predict_temp, detect_anomaly_from_recent, analyze_symptoms
 from config.db_config import db
+from models.sensor_model import create_sensor_doc, validate_sensor_doc
 import datetime
 from bson.json_util import dumps
 
