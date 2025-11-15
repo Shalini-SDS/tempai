@@ -3,6 +3,43 @@ import { useAuth } from '../context/AuthContext'
 import EmergencyPage from './EmergencyPage'
 import '../App.css'
 
+const parseDate = (dateValue) => {
+  if (!dateValue) return null
+  if (typeof dateValue === 'object' && dateValue.$date) {
+    return new Date(dateValue.$date)
+  }
+  if (typeof dateValue === 'string') {
+    return new Date(dateValue)
+  }
+  if (dateValue instanceof Date) {
+    return dateValue
+  }
+  return null
+}
+
+const formatDateTime = (dateValue) => {
+  const date = parseDate(dateValue)
+  if (!date || isNaN(date.getTime())) return 'Invalid Date'
+  return date.toLocaleString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+const formatDate = (dateValue) => {
+  const date = parseDate(dateValue)
+  if (!date || isNaN(date.getTime())) return 'Invalid Date'
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
 const tabs = [
   { id: 'home', label: 'Home' },
   { id: 'health', label: 'My Health' },
@@ -277,7 +314,7 @@ export default function Dashboard({ onLogout }) {
           .slice(0, 5)
           .reverse()
           .map((reading, idx) => ({
-            date: reading.timestamp ? new Date(reading.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `Day ${idx}`,
+            date: reading.timestamp ? formatDate(reading.timestamp) : `Day ${idx}`,
             value: reading.temperature,
           }))
       }
@@ -548,7 +585,7 @@ export default function Dashboard({ onLogout }) {
           <span className="icon">🌡️</span>
           <div>
             <p className="subtitle">Current Temperature</p>
-            <p className="timestamp">Last updated: {currentReading?.timestamp ? new Date(currentReading.timestamp).toLocaleString() : 'Loading...'}</p>
+            <p className="timestamp">Last updated: {currentReading?.timestamp ? formatDateTime(currentReading.timestamp) : 'Loading...'}</p>
           </div>
         </div>
         <div className="temperature-display">
