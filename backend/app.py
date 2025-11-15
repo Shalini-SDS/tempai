@@ -8,6 +8,7 @@ from controllers.auth_controller import auth_bp
 from controllers.report_controller import report_bp
 from controllers.data_controller import data_bp
 from controllers.user_data_controller import user_data_bp
+from controllers.hospitals_controller import hospitals_bp
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +21,7 @@ def create_app():
     app.register_blueprint(report_bp)
     app.register_blueprint(data_bp)
     app.register_blueprint(user_data_bp)
+    app.register_blueprint(hospitals_bp)
 
     @app.route('/')
     def home():

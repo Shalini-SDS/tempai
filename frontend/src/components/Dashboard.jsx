@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import EmergencyPage from './EmergencyPage'
 import '../App.css'
 
 const tabs = [
@@ -11,77 +12,12 @@ const tabs = [
   { id: 'settings', label: 'Settings' },
 ]
 
-// These will be loaded dynamically
-let symptomOptions = [
-  'Headache',
-  'Fatigue',
-  'Sore throat',
-  'Rash',
-  'Cough',
-  'Body ache',
-  'Nausea',
-  'Chills',
-]
-
-let recommendations = [
-  { title: 'Stay Hydrated', detail: 'Drink water, herbal tea, or electrolyte solutions.' },
-  { title: 'Rest Adequately', detail: 'Aim for 8-10 hours of sleep to aid recovery.' },
-  { title: 'Take Paracetamol', detail: 'Take 500mg every 6 hours if temperature exceeds 38°C.' },
-  { title: 'Monitor Temperature', detail: 'Consult a doctor if fever persists beyond 3 days.' },
-]
-
-const timeline = [
-  { time: 'Today • 11:27 PM', temperature: '38.5°C', summary: 'High fever with headache and fatigue.' },
-  { time: 'Yesterday • 08:10 PM', temperature: '38.1°C', summary: 'Moderate fever with fatigue.' },
-  { time: 'Apr 28 • 09:15 PM', temperature: '37.2°C', summary: 'Temperature stabilised, symptoms light.' },
-]
-
-const insightsHistory = [
-  { title: 'Recovery Phase', detail: 'Temperature held steady for 24h. Continue rest.' },
-  { title: 'Hydration Reminder', detail: 'Water intake below recommended. Increase fluid consumption.' },
-  { title: 'Medication Log', detail: 'Paracetamol taken twice today. Maintain dosage intervals.' },
-]
-
-const severityProbabilities = [
-  { label: 'Viral', value: 85 },
-  { label: 'Bacterial', value: 40 },
-  { label: 'Dengue', value: 20 },
-  { label: 'Malaria', value: 10 },
-]
-
-const historyRecords = [
-  { date: 'Feb 13, 2025', cause: 'Viral', severity: 'Moderate', outcome: 'Recovered in 4 days' },
-  { date: 'Oct 02, 2024', cause: 'Seasonal Flu', severity: 'Mild', outcome: 'Recovered in 3 days' },
-  { date: 'Jul 19, 2024', cause: 'Bacterial', severity: 'Critical', outcome: 'Hospitalised, recovered' },
-]
-
-const emergencyContacts = [
-  { label: 'Emergency Services', value: '911', type: 'primary' },
-  { label: 'Family Doctor', value: '+1 (555) 123-4567', type: 'secondary' },
-  { label: 'Emergency Contact', value: '+1 (555) 987-6543', type: 'secondary' },
-]
-
-const nearbyFacilities = [
-  { name: 'City General Hospital', distance: '1.2 km', eta: '5 min' },
-  { name: 'Metro Medical Center', distance: '2.8 km', eta: '10 min' },
-  { name: 'Community Health Clinic', distance: '3.5 km', eta: '12 min' },
-]
-
-const criticalSymptoms = ['Temperature above 40°C (104°F)', 'Severe headache or stiff neck', 'Difficulty breathing', 'Persistent vomiting']
-
-const warningSigns = ['Confusion or altered consciousness', 'Rapid heartbeat or chest pain', 'Rash with purple spots', 'Seizures or convulsions']
-
-const currentVitals = [
-  { label: 'Heart Rate', value: '78 bpm' },
-  { label: 'Blood Pressure', value: '120/80' },
-  { label: 'Oxygen Level', value: '98 %' },
-  { label: 'Respiratory Rate', value: '16 /min' },
-]
+// All data is now loaded dynamically from the database
 
 export default function Dashboard({ onLogout }) {
   const { user, token, logout, updateUserSettings } = useAuth()
   const [activeTab, setActiveTab] = useState('home')
-  const [selectedSymptoms, setSelectedSymptoms] = useState(['Headache', 'Fatigue'])
+  const [selectedSymptoms, setSelectedSymptoms] = useState([])
 
   const [formData, setFormData] = useState({
     temperature: '',
@@ -91,14 +27,14 @@ export default function Dashboard({ onLogout }) {
   })
   const [prediction, setPrediction] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [displayedRecommendations, setDisplayedRecommendations] = useState(recommendations)
+  const [displayedRecommendations, setDisplayedRecommendations] = useState([])
 
   const [currentReading, setCurrentReading] = useState(null)
   const [historyReadings, setHistoryReadings] = useState([])
 
-  // Dynamic data states
-  const [dynamicSymptomOptions, setDynamicSymptomOptions] = useState(symptomOptions)
-  const [dynamicRecommendations, setDynamicRecommendations] = useState(recommendations)
+  // Dynamic data states - all loaded from database
+  const [dynamicSymptomOptions, setDynamicSymptomOptions] = useState([])
+  const [dynamicRecommendations, setDynamicRecommendations] = useState([])
   const [severityProbabilities, setSeverityProbabilities] = useState([])
   const [emergencyContacts, setEmergencyContacts] = useState([])
   const [nearbyFacilities, setNearbyFacilities] = useState([])
@@ -108,6 +44,9 @@ export default function Dashboard({ onLogout }) {
   const [timeline, setTimeline] = useState([])
   const [insightsHistory, setInsightsHistory] = useState([])
   const [historyRecords, setHistoryRecords] = useState([])
+  const [healthScore, setHealthScore] = useState(null)
+  const [insightComparison, setInsightComparison] = useState('')
+  const [insightTips, setInsightTips] = useState([])
 
   const [settingsData, setSettingsData] = useState({
     name: user?.name || '',
@@ -117,6 +56,8 @@ export default function Dashboard({ onLogout }) {
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState('')
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [filterSeverity, setFilterSeverity] = useState('')
+  const [filterSearchTerm, setFilterSearchTerm] = useState('')
 
   useEffect(() => {
     setSettingsData({
@@ -126,12 +67,18 @@ export default function Dashboard({ onLogout }) {
     })
   }, [user])
 
+  useEffect(() => {
+    const temp = currentReading?.temperature || 38.5
+    const score = calculateHealthScore(temp, selectedSymptoms.length)
+    setHealthScore(score)
+  }, [currentReading, selectedSymptoms])
+
   // Fetch static data
   useEffect(() => {
     const fetchStaticData = async () => {
-      const API = ''
+      const API = 'http://localhost:5000'
       try {
-        const [symptomsRes, recommendationsRes, severityRes, contactsRes, facilitiesRes, criticalRes, warningRes, vitalsRes] = await Promise.all([
+        const [symptomsRes, recommendationsRes, severityRes, contactsRes, facilitiesRes, criticalRes, warningRes, vitalsRes, healthRes] = await Promise.all([
           fetch(`${API}/api/data/symptoms`),
           fetch(`${API}/api/data/recommendations`),
           fetch(`${API}/api/data/severity-probabilities`),
@@ -139,21 +86,75 @@ export default function Dashboard({ onLogout }) {
           fetch(`${API}/api/data/nearby-facilities`),
           fetch(`${API}/api/data/critical-symptoms`),
           fetch(`${API}/api/data/warning-signs`),
-          fetch(`${API}/api/data/current-vitals`)
+          fetch(`${API}/api/data/current-vitals`),
+          fetch(`${API}/api/data/health-score`)
         ])
 
-        if (symptomsRes.ok) setDynamicSymptomOptions(await symptomsRes.json())
-        if (recommendationsRes.ok) {
-          const recs = await recommendationsRes.json()
-          setDynamicRecommendations(recs)
-          setDisplayedRecommendations(recs)
+        if (symptomsRes.ok) {
+          try {
+            setDynamicSymptomOptions(await symptomsRes.json())
+          } catch (e) {
+            console.error('Error parsing symptoms:', e)
+          }
         }
-        if (severityRes.ok) setSeverityProbabilities(await severityRes.json())
-        if (contactsRes.ok) setEmergencyContacts(await contactsRes.json())
-        if (facilitiesRes.ok) setNearbyFacilities(await facilitiesRes.json())
-        if (criticalRes.ok) setCriticalSymptoms(await criticalRes.json())
-        if (warningRes.ok) setWarningSigns(await warningRes.json())
-        if (vitalsRes.ok) setCurrentVitals(await vitalsRes.json())
+        if (recommendationsRes.ok) {
+          try {
+            const recs = await recommendationsRes.json()
+            setDynamicRecommendations(recs)
+            setDisplayedRecommendations(recs)
+          } catch (e) {
+            console.error('Error parsing recommendations:', e)
+          }
+        }
+        if (severityRes.ok) {
+          try {
+            setSeverityProbabilities(await severityRes.json())
+          } catch (e) {
+            console.error('Error parsing severity:', e)
+          }
+        }
+        if (contactsRes.ok) {
+          try {
+            setEmergencyContacts(await contactsRes.json())
+          } catch (e) {
+            console.error('Error parsing contacts:', e)
+          }
+        }
+        if (facilitiesRes.ok) {
+          try {
+            setNearbyFacilities(await facilitiesRes.json())
+          } catch (e) {
+            console.error('Error parsing facilities:', e)
+          }
+        }
+        if (criticalRes.ok) {
+          try {
+            setCriticalSymptoms(await criticalRes.json())
+          } catch (e) {
+            console.error('Error parsing critical symptoms:', e)
+          }
+        }
+        if (warningRes.ok) {
+          try {
+            setWarningSigns(await warningRes.json())
+          } catch (e) {
+            console.error('Error parsing warning signs:', e)
+          }
+        }
+        if (vitalsRes.ok) {
+          try {
+            setCurrentVitals(await vitalsRes.json())
+          } catch (e) {
+            console.error('Error parsing vitals:', e)
+          }
+        }
+        if (healthRes.ok) {
+          try {
+            setHealthScore(await healthRes.json())
+          } catch (e) {
+            console.error('Error parsing health score:', e)
+          }
+        }
       } catch (error) {
         console.error('Error fetching static data:', error)
       }
@@ -167,9 +168,9 @@ export default function Dashboard({ onLogout }) {
     const fetchUserData = async () => {
       if (!token) return
 
-      const API = ''
+      const API = 'http://localhost:5000'
       try {
-        const [timelineRes, insightsRes, historyRes] = await Promise.all([
+        const [timelineRes, insightsRes, historyRes, dynamicInsightsRes] = await Promise.all([
           fetch(`${API}/api/user/timeline`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
@@ -178,12 +179,43 @@ export default function Dashboard({ onLogout }) {
           }),
           fetch(`${API}/api/user/history-records`, {
             headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API}/api/user/dynamic-insights`, {
+            headers: { 'Authorization': `Bearer ${token}` }
           })
         ])
 
-        if (timelineRes.ok) setTimeline(await timelineRes.json())
-        if (insightsRes.ok) setInsightsHistory(await insightsRes.json())
-        if (historyRes.ok) setHistoryRecords(await historyRes.json())
+        if (timelineRes.ok) {
+          try {
+            setTimeline(await timelineRes.json())
+          } catch (e) {
+            console.error('Error parsing timeline:', e)
+          }
+        }
+        if (insightsRes.ok) {
+          try {
+            setInsightsHistory(await insightsRes.json())
+          } catch (e) {
+            console.error('Error parsing insights:', e)
+          }
+        }
+        if (historyRes.ok) {
+          try {
+            setHistoryRecords(await historyRes.json())
+          } catch (e) {
+            console.error('Error parsing history records:', e)
+          }
+        }
+        if (dynamicInsightsRes.ok) {
+          try {
+            const dynamicInsights = await dynamicInsightsRes.json()
+            setSeverityProbabilities(dynamicInsights.severity || [])
+            setInsightComparison(dynamicInsights.comparison || '')
+            setInsightTips(dynamicInsights.tips || [])
+          } catch (e) {
+            console.error('Error parsing dynamic insights:', e)
+          }
+        }
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
@@ -194,9 +226,13 @@ export default function Dashboard({ onLogout }) {
 
   useEffect(() => {
     const fetchLatestReading = async () => {
-      const API = ''
+      const API = 'http://localhost:5000'
       try {
         const res = await fetch(`${API}/api/latestData`)
+        if (!res.ok) {
+          console.error('Failed to fetch latest reading:', res.status, res.statusText)
+          return
+        }
         const data = await res.json()
         if (data && data.temperature !== undefined) {
           setCurrentReading(data)
@@ -205,11 +241,15 @@ export default function Dashboard({ onLogout }) {
         console.error('Error fetching latest reading:', error)
       }
     }
-    
+
     const fetchHistory = async () => {
-      const API = ''
+      const API = 'http://localhost:5000'
       try {
         const res = await fetch(`${API}/api/history?limit=50`)
+        if (!res.ok) {
+          console.error('Failed to fetch history:', res.status, res.statusText)
+          return
+        }
         const data = await res.json()
         if (Array.isArray(data)) {
           setHistoryReadings(data)
@@ -252,6 +292,21 @@ export default function Dashboard({ onLogout }) {
     [historyReadings],
   )
 
+  const filteredHistoryRecords = useMemo(
+    () => {
+      return historyRecords.filter((record) => {
+        const matchesSeverity = filterSeverity ? record.severity === filterSeverity : true
+        const matchesSearch = filterSearchTerm
+          ? record.cause.toLowerCase().includes(filterSearchTerm.toLowerCase()) ||
+            record.date.toLowerCase().includes(filterSearchTerm.toLowerCase()) ||
+            record.outcome.toLowerCase().includes(filterSearchTerm.toLowerCase())
+          : true
+        return matchesSeverity && matchesSearch
+      })
+    },
+    [historyRecords, filterSeverity, filterSearchTerm],
+  )
+
   const temperature = currentReading?.temperature || 38.5
   const status = temperature >= 39 ? 'high' : temperature >= 37.5 ? 'moderate' : 'normal'
 
@@ -271,10 +326,53 @@ export default function Dashboard({ onLogout }) {
       .join(' ')
   }, [temperatureReadings])
 
+  const calculateHealthScore = (temp, symptomsCount) => {
+    let temperatureScore = 100
+    let symptomScore = 100
+    let vitalsScore = 95
+    
+    if (temp >= 40) {
+      temperatureScore = 20
+    } else if (temp >= 39) {
+      temperatureScore = 35
+    } else if (temp >= 38) {
+      temperatureScore = 55
+    } else if (temp >= 37.5) {
+      temperatureScore = 75
+    } else {
+      temperatureScore = 95
+    }
+    
+    if (symptomsCount === 0) {
+      symptomScore = 100
+    } else if (symptomsCount === 1) {
+      symptomScore = 80
+    } else if (symptomsCount === 2) {
+      symptomScore = 60
+    } else if (symptomsCount === 3) {
+      symptomScore = 40
+    } else {
+      symptomScore = 20
+    }
+    
+    const overallScore = Math.round((temperatureScore + symptomScore + vitalsScore) / 3)
+    
+    return {
+      overall_score: overallScore,
+      status: overallScore >= 80 ? 'Good' : overallScore >= 60 ? 'Fair' : 'Poor',
+      components: {
+        temperature: temperatureScore,
+        symptoms: symptomScore,
+        vitals: vitalsScore
+      }
+    }
+  }
+
   const toggleSymptom = (symptom) => {
-    setSelectedSymptoms((prev) =>
-      prev.includes(symptom) ? prev.filter((item) => item !== symptom) : [...prev, symptom],
-    )
+    setSelectedSymptoms((prev) => {
+      const updated = prev.includes(symptom) ? prev.filter((item) => item !== symptom) : [...prev, symptom]
+      return updated
+    })
   }
 
   const handleFormChange = (field, value) => {
@@ -291,11 +389,25 @@ export default function Dashboard({ onLogout }) {
   }
 
   const analyze = async () => {
-    const API = ''
+    const API = 'http://localhost:5000'
     setLoading(true)
     try {
+      const temperature = parseFloat(formData.temperature)
+      
+      if (!temperature || isNaN(temperature)) {
+        alert('Please enter a valid temperature')
+        setLoading(false)
+        return
+      }
+
+      await fetch(`${API}/api/uploadData`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temperature }),
+      })
+
       const payload = {
-        temperature: parseFloat(formData.temperature),
+        temperature: temperature,
         age: parseInt(formData.age),
         days_since_onset: parseInt(formData.daysInOnset),
         symptoms: formData.symptoms,
@@ -305,12 +417,50 @@ export default function Dashboard({ onLogout }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      if (!res.ok) {
+        console.error('Failed to analyze:', res.status, res.statusText)
+        return
+      }
       const json = await res.json()
       setPrediction({
         prediction: json.prediction,
         confidence: json.confidence,
       })
       setDisplayedRecommendations(json.recommendations || [])
+
+      const latestRes = await fetch(`${API}/api/latestData`)
+      if (latestRes.ok) {
+        const latestData = await latestRes.json()
+        setCurrentReading(latestData)
+      }
+
+      const historyRes = await fetch(`${API}/api/history?limit=50`)
+      if (historyRes.ok) {
+        const historyData = await historyRes.json()
+        if (Array.isArray(historyData)) {
+          setHistoryReadings(historyData)
+        }
+      }
+
+      if (token) {
+        const timelineRes = await fetch(`${API}/api/user/timeline`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (timelineRes.ok) {
+          const timelineData = await timelineRes.json()
+          setTimeline(timelineData)
+        }
+
+        const insightsRes = await fetch(`${API}/api/user/dynamic-insights`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (insightsRes.ok) {
+          const insightsData = await insightsRes.json()
+          setSeverityProbabilities(insightsData.severity || [])
+          setInsightComparison(insightsData.comparison || '')
+          setInsightTips(insightsData.tips || [])
+        }
+      }
     } catch (error) {
       console.error('Error analyzing:', error)
     } finally {
@@ -375,8 +525,13 @@ export default function Dashboard({ onLogout }) {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        const errorData = await response.json()
-        alert(`Failed to download PDF: ${errorData.message || 'Unknown error'}`)
+        try {
+          const errorData = await response.json()
+          alert(`Failed to download PDF: ${errorData.message || 'Unknown error'}`)
+        } catch (e) {
+          console.error('Error parsing PDF error response:', e)
+          alert('Failed to download PDF: Server error')
+        }
       }
     } catch (error) {
       console.error('Error downloading PDF:', error)
@@ -407,25 +562,25 @@ export default function Dashboard({ onLogout }) {
           <span className="icon">🛡️</span>
           <div>
             <p className="subtitle">Health Score</p>
-            <p className="status-label">Good</p>
+            <p className="status-label">{healthScore?.status || 'Loading...'}</p>
           </div>
         </div>
         <div className="gauge">
           <div className="gauge-circle">
-            <div className="gauge-inner">78</div>
+            <div className="gauge-inner">{healthScore?.overall_score || '...'}</div>
           </div>
           <div className="gauge-metrics">
             <div>
               <span>Temperature</span>
-              <span>85%</span>
+              <span>{healthScore?.components?.temperature || 0}%</span>
             </div>
             <div>
               <span>Symptoms</span>
-              <span>60%</span>
+              <span>{healthScore?.components?.symptoms || 0}%</span>
             </div>
             <div>
               <span>Vitals</span>
-              <span>95%</span>
+              <span>{healthScore?.components?.vitals || 0}%</span>
             </div>
           </div>
         </div>
@@ -623,61 +778,130 @@ export default function Dashboard({ onLogout }) {
     <div className="panel">
       <h2>AI Insights Overview</h2>
       <div className="severity-grid">
-        {severityProbabilities.map((item) => (
-          <div key={item.label} className="severity-item">
-            <div className="probability-circle">
-              <span>{item.value}%</span>
-            </div>
-            <p>{item.label}</p>
-          </div>
-        ))}
+        {severityProbabilities.length > 0 ? (
+          severityProbabilities.map((item) => {
+            const degrees = (item.value / 100) * 360
+            return (
+              <div key={item.label} className="severity-item">
+                <div 
+                  className="probability-circle"
+                  style={{
+                    background: `conic-gradient(#00BCD4 0deg ${degrees}deg, rgba(0, 188, 212, 0.15) ${degrees}deg 360deg)`
+                  }}
+                >
+                  <span>{item.value}%</span>
+                </div>
+                <p>{item.label}</p>
+              </div>
+            )
+          })
+        ) : (
+          <p>Loading insights...</p>
+        )}
       </div>
       <div className="comparison-card">
-        <h3>Comparison</h3>
-        <p>Current temperature is 0.3°C higher than yesterday. Symptom intensity reduced by 15%.</p>
+        <h3>Temperature Analysis</h3>
+        <p>{insightComparison || 'Submit a temperature reading to see analysis.'}</p>
       </div>
       <div className="smart-tips">
-        <h3>Smart Tips</h3>
-        <ul>
-          <li>Your temperature has been stable for 24 hours — likely recovery phase.</li>
-          <li>Headache frequency decreased compared to last week.</li>
-          <li>Maintain hydration to support faster recovery.</li>
-        </ul>
+        <h3>AI Recommendations</h3>
+        {insightTips.length > 0 ? (
+          <ul>
+            {insightTips.map((tip, idx) => (
+              <li key={idx}>{tip}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>Tips will appear after submitting a temperature reading.</p>
+        )}
       </div>
     </div>
   )
 
-  const renderHistory = () => (
-    <div className="panel">
-      <h2>Fever Episodes</h2>
-      <div className="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Cause</th>
-              <th>Severity</th>
-              <th>Outcome</th>
-            </tr>
-          </thead>
-          <tbody>
-            {historyRecords.map((record) => (
-              <tr key={record.date}>
-                <td>{record.date}</td>
-                <td>{record.cause}</td>
-                <td>{record.severity}</td>
-                <td>{record.outcome}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  const renderHistory = () => {
+    const uniqueSeverities = [...new Set(historyRecords.map(r => r.severity))]
+    
+    return (
+      <div className="panel">
+        <h2>Fever Episodes</h2>
+        
+        <div className="history-filters">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search by cause, date, or outcome..."
+              value={filterSearchTerm}
+              onChange={(e) => setFilterSearchTerm(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+          
+          <div className="filter-controls">
+            <div className="filter-group">
+              <label htmlFor="severity-filter">Filter by Severity:</label>
+              <select
+                id="severity-filter"
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">All Severities</option>
+                {uniqueSeverities.map((severity) => (
+                  <option key={severity} value={severity}>
+                    {severity}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <button
+              type="button"
+              onClick={() => {
+                setFilterSeverity('')
+                setFilterSearchTerm('')
+              }}
+              className="reset-button"
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
+
+        <div className="table-wrapper">
+          {filteredHistoryRecords.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Cause</th>
+                  <th>Severity</th>
+                  <th>Outcome</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHistoryRecords.map((record, idx) => (
+                  <tr key={`${record.date}-${idx}`}>
+                    <td>{record.date}</td>
+                    <td>{record.cause}</td>
+                    <td>
+                      <span className={`severity-badge ${record.severity.toLowerCase()}`}>
+                        {record.severity}
+                      </span>
+                    </td>
+                    <td>{record.outcome}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="no-results">
+              <p>No fever episodes found matching your filters.</p>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="filters">
-        <button type="button">Filter by Date</button>
-        <button type="button">Filter by Severity</button>
-      </div>
-    </div>
-  )
+    )
+  }
 
   const renderEmergency = () => (
     <div className="emergency-layout">
@@ -936,7 +1160,7 @@ export default function Dashboard({ onLogout }) {
     if (activeTab === 'health') return renderHealth()
     if (activeTab === 'insights') return renderInsights()
     if (activeTab === 'history') return renderHistory()
-    if (activeTab === 'emergency') return renderEmergency()
+    if (activeTab === 'emergency') return <EmergencyPage />
     return renderSettings()
   }
 

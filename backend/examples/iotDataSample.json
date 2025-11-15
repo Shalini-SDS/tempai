@@ -1,0 +1,158 @@
+{
+  "normalVitals": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 72,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 120,
+      "diastolic": 80,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 98,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 16,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 37,
+      "unit": "°C"
+    },
+    "notes": "Normal reading"
+  },
+  "abnormalVitals_HighTemperature": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 92,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 125,
+      "diastolic": 85,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 96,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 18,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 40.5,
+      "unit": "°C"
+    },
+    "notes": "High fever detected - ALERT TRIGGERED"
+  },
+  "abnormalVitals_LowOxygen": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 110,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 135,
+      "diastolic": 88,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 88,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 24,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 37.2,
+      "unit": "°C"
+    },
+    "notes": "Low oxygen level - ALERT TRIGGERED"
+  },
+  "abnormalVitals_HighHeartRate": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 155,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 140,
+      "diastolic": 92,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 97,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 20,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 36.8,
+      "unit": "°C"
+    },
+    "notes": "Elevated heart rate - ALERT TRIGGERED"
+  },
+  "abnormalVitals_RespiratoryIssue": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 85,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 118,
+      "diastolic": 78,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 94,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 32,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 37.1,
+      "unit": "°C"
+    },
+    "notes": "Abnormal respiratory rate - ALERT TRIGGERED"
+  },
+  "critical_MultipleAbnormalities": {
+    "userId": "user_id_here",
+    "deviceId": "IOT_DEVICE_001",
+    "heartRate": {
+      "value": 145,
+      "unit": "bpm"
+    },
+    "bloodPressure": {
+      "systolic": 155,
+      "diastolic": 100,
+      "unit": "mmHg"
+    },
+    "oxygenLevel": {
+      "value": 85,
+      "unit": "%"
+    },
+    "respiratoryRate": {
+      "value": 28,
+      "unit": "breaths/min"
+    },
+    "temperature": {
+      "value": 41.2,
+      "unit": "°C"
+    },
+    "notes": "Critical condition with multiple abnormalities - CRITICAL ALERT TRIGGERED"
+  }
+}
